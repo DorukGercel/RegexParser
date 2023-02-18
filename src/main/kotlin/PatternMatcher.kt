@@ -19,7 +19,11 @@ class PatternMatcher {
             for (symbol in word) {
                 val nextStatesList: MutableList<State> = mutableListOf()
                 for (st in currentStates) {
-                    val nextState = st.transition[symbol];
+                    var nextState = st.transition[symbol];
+                    if (nextState != null) {
+                        addNextState(nextState, nextStatesList, mutableListOf());
+                    }
+                    nextState = st.transition['@'];
                     if (nextState != null) {
                         addNextState(nextState, nextStatesList, mutableListOf());
                     }

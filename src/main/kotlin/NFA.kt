@@ -54,6 +54,31 @@ class NFA(var startState: State, var endState: State) {
 
             return NFA(start, end)
         }
+
+        fun zeroOrOne(nfa: NFA): NFA {
+            val start = State(false)
+            val end = State(true)
+
+            start.addEpsilonTransition(end)
+            start.addEpsilonTransition(nfa.startState)
+
+            nfa.endState.addEpsilonTransition(end)
+            nfa.endState.isEndState = false;
+
+            return NFA(start, end)
+        }
+
+        fun oneOrMore(nfa: NFA): NFA {
+            val start = State(false)
+            val end = State(true)
+
+            start.addEpsilonTransition(nfa.startState)
+            nfa.endState.addEpsilonTransition(end)
+            nfa.endState.addEpsilonTransition(nfa.startState)
+            nfa.endState.isEndState = false;
+
+            return NFA(start, end)
+        }
     }
 }
 
@@ -68,6 +93,12 @@ class NFABuilder {
                 when (token) {
                     '*' -> {
                         stack.add(NFA.closure(stack.removeLast()));
+                    }
+                    '+' -> {
+                        stack.add(NFA.oneOrMore(stack.removeLast()));
+                    }
+                    '?' -> {
+                        stack.add(NFA.zeroOrOne(stack.removeLast()));
                     }
                     '|' -> {
                         val right = stack.removeLast()

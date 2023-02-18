@@ -79,7 +79,7 @@ class Notation {
                     }
                     infixNotation += exp[i]
                 } else if(exp[i] == '.') {
-                    infixNotation += alphabetStatement.toCharArray().toList()
+                    infixNotation += '@'
                 } else {
                     infixNotation += exp[i]
                 }
