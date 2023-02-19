@@ -3,83 +3,48 @@ import kotlin.collections.ArrayList
 
 class Notation {
     companion object {
-        private fun getPrecedence(op: Char): Int {
-            return when(op) {
-                '|' -> 1
-                '.' -> 2
-                '?', '*', '+' -> 3
-                else -> 0
-            }
-        }
-        private fun getAlphabet(exp: String): List<Char> {
-            val output = mutableSetOf<Char>()
-            for (token in exp) {
-                if (!(token == '.' || token == '|' || token == '*' || token == '?' || token == '+' || token == '(' || token == ')' || token == '[' || token == ']')) {
-                    output += token
-                }
-            }
-            return output.toList()
-        }
-
-        private fun getAlphabetStatement(alphabet: List<Char>): String {
-            val output = ArrayList<Char>()
-            var isFirst = true
-            output += '('
-            for(token in alphabet) {
-                if(!isFirst) {
-                    output += '|'
-                } else {
-                    isFirst = false
-                }
-                output += token
-            }
-            output += ')'
-            return String(output.toCharArray())
-        }
-
         private fun insertExplicitConcatOperator(exp: String): String {
             val output = ArrayList<Char>()
             for(i in exp.indices) {
                 val token = exp[i]
                 output += token
                 if (token == '(' || token == '|') {
-                    continue;
+                    continue
                 }
                 if (i < exp.length - 1) {
-                    val lookahead = exp[i + 1];
+                    val lookahead = exp[i + 1]
                     if (lookahead == '*' || lookahead == '?' || lookahead == '+' || lookahead == '|' || lookahead == ')') {
-                        continue;
+                        continue
                     }
-                    output += '.';
+                    output += '.'
                 }
             }
             return String(output.toCharArray())
-        };
+        }
 
         private fun regexToInfix(exp: String): String {
-            val alphabetStatement = getAlphabetStatement(getAlphabet(exp))
             val infixNotation: MutableList<Char> = LinkedList()
             var isAnyOf = false
             var isFirstAnyOf = false
 
             // Sanitize the regex for the infix notation
             for (i in exp.indices) {
-                if (exp[i] == '[') {
-                    infixNotation += '('
+                if (exp[i] == SQUARE_PARENTHESIS_OPEN) {
+                    infixNotation += PARENTHESIS_OPEN
                     isAnyOf = true
                     isFirstAnyOf = true
-                } else if (exp[i] == ']') {
-                    infixNotation += ')'
+                } else if (exp[i] == SQUARE_PARENTHESIS_CLOSE) {
+                    infixNotation += PARENTHESIS_CLOSE
                     isAnyOf = false
                 } else if(isAnyOf) {
                     if(!isFirstAnyOf) {
-                        infixNotation += '|'
+                        infixNotation += UNION
                     } else {
                         isFirstAnyOf = false
                     }
                     infixNotation += exp[i]
-                } else if(exp[i] == '.') {
-                    infixNotation += '@'
+                } else if(exp[i] == ANY_CHAR_REGEX) {
+                    infixNotation += ANY_CHAR_POSTFIX
                 } else {
                     infixNotation += exp[i]
                 }
@@ -88,30 +53,29 @@ class Notation {
             // Sanitize the output for or parenthesis
             var i = 0
             while (i < infixNotation.count()) {
-                if(infixNotation[i] == '|') {
-                    if(infixNotation[i-1] != ')') {
-                        infixNotation.add(i-1, '(')
+                if(infixNotation[i] == UNION) {
+                    if(infixNotation[i-1] != PARENTHESIS_CLOSE) {
+                        infixNotation.add(i-1, PARENTHESIS_OPEN)
                     } else {
                         var j = i-1
-                        while(j > 0 && infixNotation[j] != '(') {
+                        while(j > 0 && infixNotation[j] != PARENTHESIS_OPEN) {
                             j--
                         }
-                        infixNotation.add(j, '(')
+                        infixNotation.add(j, PARENTHESIS_OPEN)
                     }
                     i += 1
-                    if(infixNotation[i+1] != '(') {
-                        infixNotation.add(i+2, ')')
+                    if(infixNotation[i+1] != PARENTHESIS_OPEN) {
+                        infixNotation.add(i+2, PARENTHESIS_CLOSE)
                     } else {
                         var j = i+1
-                        while(j < infixNotation.count() && infixNotation[j] != ')') {
+                        while(j < infixNotation.count() && infixNotation[j] != PARENTHESIS_CLOSE) {
                             j++
                         }
-                        infixNotation.add(j+1, ')')
+                        infixNotation.add(j+1, PARENTHESIS_CLOSE)
                     }
                 }
                 i += 1
             }
-
             return insertExplicitConcatOperator(String(infixNotation.toCharArray()))
         }
 
@@ -119,16 +83,16 @@ class Notation {
             val output = ArrayList<Char>()
             val operatorStack = ArrayList<Char>()
             for (token in exp) {
-                if (token == '.' || token == '|' || token == '*' || token == '?' || token == '+') {
-                    while (operatorStack.isNotEmpty() && operatorStack.last() != '(' && (getPrecedence(operatorStack.last()) >= getPrecedence(token))) {
+                if (isSpecialControlPostfixToken(token)) {
+                    while (operatorStack.isNotEmpty() && operatorStack.last() != PARENTHESIS_OPEN && (getSpecialTokenPrecedence(operatorStack.last()) >= getSpecialTokenPrecedence(token))) {
                         output += operatorStack.removeLast()
                     }
                     operatorStack.add(token)
-                } else if (token == '(' || token == ')') {
-                    if (token == '(') {
+                } else if (token == PARENTHESIS_OPEN || token == PARENTHESIS_CLOSE) {
+                    if (token == PARENTHESIS_OPEN) {
                         operatorStack.add(token)
                     } else {
-                        while (operatorStack.last() != '(') {
+                        while (operatorStack.last() != PARENTHESIS_OPEN) {
                             output += operatorStack.removeLast()
                         }
                         operatorStack.removeLast()

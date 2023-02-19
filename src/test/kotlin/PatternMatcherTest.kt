@@ -84,8 +84,15 @@ class PatternMatcherTest {
 
     @Test
     fun simpleConcatMatch() {
-        val pattern = "aaa"
-        val word = "aaa"
+        var pattern = "aaa"
+        var word = "aaa"
+        assertTrue(PatternMatcher.match(NFABuilder.fromPostfixToNFA(Notation.regexToPostfix(pattern)), word))
+        pattern = "..."
+        word = "aaa"
+        assertTrue(PatternMatcher.match(NFABuilder.fromPostfixToNFA(Notation.regexToPostfix(pattern)), word))
+        word = "aba"
+        assertTrue(PatternMatcher.match(NFABuilder.fromPostfixToNFA(Notation.regexToPostfix(pattern)), word))
+        word = "abc"
         assertTrue(PatternMatcher.match(NFABuilder.fromPostfixToNFA(Notation.regexToPostfix(pattern)), word))
     }
 

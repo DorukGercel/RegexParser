@@ -21,63 +21,63 @@ class NFA(var startState: State, var endState: State) {
 
     companion object Operation {
         fun concat(first: NFA, second: NFA): NFA {
-            first.endState.addEpsilonTransition(second.startState);
+            first.endState.addEpsilonTransition(second.startState)
             first.endState.isEndState = false
 
             return NFA(first.startState, second.endState)
         }
 
         fun union(first: NFA, second: NFA): NFA {
-            val start = State(false);
-            start.addEpsilonTransition(first.startState);
-            start.addEpsilonTransition(second.startState);
+            val startState = State(false)
+            startState.addEpsilonTransition(first.startState)
+            startState.addEpsilonTransition(second.startState)
 
-            val end = State(true);
-            first.endState.addEpsilonTransition(end);
-            second.endState.addEpsilonTransition(end);
-            first.endState.isEndState = false;
-            second.endState.isEndState = false;
+            val endState = State(true)
+            first.endState.addEpsilonTransition(endState)
+            second.endState.addEpsilonTransition(endState)
+            first.endState.isEndState = false
+            second.endState.isEndState = false
 
-            return NFA(start, end)
+            return NFA(startState, endState)
         }
 
         fun closure(nfa: NFA): NFA {
-            val start = State(false);
-            val end = State(true);
+            val startState = State(false)
+            val endState = State(true)
 
-            start.addEpsilonTransition(end);
-            start.addEpsilonTransition(nfa.startState);
+            startState.addEpsilonTransition(endState)
+            startState.addEpsilonTransition(nfa.startState)
 
-            nfa.endState.addEpsilonTransition(end);
-            nfa.endState.addEpsilonTransition(nfa.startState);
-            nfa.endState.isEndState = false;
+            nfa.endState.addEpsilonTransition(endState)
+            nfa.endState.addEpsilonTransition(nfa.startState)
+            nfa.endState.isEndState = false
 
-            return NFA(start, end)
+            return NFA(startState, endState)
         }
 
         fun zeroOrOne(nfa: NFA): NFA {
-            val start = State(false)
-            val end = State(true)
+            val startState = State(false)
+            val endState = State(true)
 
-            start.addEpsilonTransition(end)
-            start.addEpsilonTransition(nfa.startState)
+            startState.addEpsilonTransition(endState)
+            startState.addEpsilonTransition(nfa.startState)
 
-            nfa.endState.addEpsilonTransition(end)
-            nfa.endState.isEndState = false;
+            nfa.endState.addEpsilonTransition(endState)
+            nfa.endState.isEndState = false
 
-            return NFA(start, end)
+            return NFA(startState, endState)
         }
 
         fun oneOrMore(nfa: NFA): NFA {
-            val start = State(false)
-            val end = State(true)
+            val startState = State(false)
+            val endState = State(true)
 
-            start.addEpsilonTransition(nfa.startState)
-            nfa.endState.addEpsilonTransition(end)
+            startState.addEpsilonTransition(nfa.startState)
+            nfa.endState.addEpsilonTransition(endState)
             nfa.endState.addEpsilonTransition(nfa.startState)
-            nfa.endState.isEndState = false;
+            nfa.endState.isEndState = false
 
-            return NFA(start, end)
+            return NFA(startState, endState)
         }
     }
 }
@@ -91,31 +91,31 @@ class NFABuilder {
             val stack = ArrayList<NFA>()
             for (token in postfixExp) {
                 when (token) {
-                    '*' -> {
-                        stack.add(NFA.closure(stack.removeLast()));
+                    KLEN_STAR -> {
+                        stack.add(NFA.closure(stack.removeLast()))
                     }
-                    '+' -> {
-                        stack.add(NFA.oneOrMore(stack.removeLast()));
+                    ONE_OR_MORE -> {
+                        stack.add(NFA.oneOrMore(stack.removeLast()))
                     }
-                    '?' -> {
-                        stack.add(NFA.zeroOrOne(stack.removeLast()));
+                    ZERO_OR_ONE -> {
+                        stack.add(NFA.zeroOrOne(stack.removeLast()))
                     }
-                    '|' -> {
-                        val right = stack.removeLast()
-                        val left = stack.removeLast()
-                        stack.add(NFA.union(left, right));
+                    UNION -> {
+                        val rightState = stack.removeLast()
+                        val leftState = stack.removeLast()
+                        stack.add(NFA.union(leftState, rightState))
                     }
-                    '.' -> {
-                        val right = stack.removeLast()
-                        val left = stack.removeLast()
-                        stack.add(NFA.concat(left, right));
+                    CONCAT -> {
+                        val rightState = stack.removeLast()
+                        val leftState = stack.removeLast()
+                        stack.add(NFA.concat(leftState, rightState))
                     }
                     else -> {
-                        stack.add(NFA(token));
+                        stack.add(NFA(token))
                     }
                 }
             }
-            return stack.removeLast();
+            return stack.removeLast()
         }
     }
 }
